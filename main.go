@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -29,7 +28,12 @@ func run() error {
 		return fmt.Errorf("Failed to open state file: %s", err)
 	}
 
-	lastBootId := state.LastBootId()
+	lastBootId, nextSeq := state.LastState()
+
+	writer, err := NewWriter(nextSeq)
+	if err != nil {
+		return fmt.Errorf("error initializing writer: %s", err)
+	}
 
 	seeked, err := journal.Next()
 	if seeked == 0 || err != nil {
@@ -57,12 +61,12 @@ func run() error {
 		skip = 1
 	}
 
-	err = state.SetLastBootId(bootId)
+	err = state.SetState(bootId, nextSeq)
 	if err != nil {
 		return fmt.Errorf("Failed to write state: %s", err)
 	}
 
-	bufSize := 1000
+	bufSize := 100
 
 	records := make(chan *Record)
 	batches := make(chan []Record)
@@ -71,13 +75,18 @@ func run() error {
 	go BatchRecords(records, batches, bufSize)
 
 	for batch := range batches {
-		jsonDataBytes, err := json.MarshalIndent(batch, "", "  ")
-		if err != nil {
-			return err
-		}
-		jsonData := string(jsonDataBytes)
 
-		fmt.Println("Journal ", jsonData)
+		nextSeq, err = writer.WriteBatch(batch)
+		if err != nil {
+			return fmt.Errorf("Failed to write to cloudwatch: %s", err)
+		}
+
+		err = state.SetState(bootId, nextSeq)
+		if err != nil {
+			return fmt.Errorf("Failed to write state: %s", err)
+		}
+
+		fmt.Println("Journal ", batch)
 	}
 
 	return nil

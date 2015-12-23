@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-const stateFormat = "%s\n"
+const stateFormat = "%s\n%s\n"
 const mapSize = 64
 
 type State struct {
@@ -30,21 +30,26 @@ func (s State) Sync() error {
 	return s.file.Sync()
 }
 
-func (s State) LastBootId() string {
+func (s State) LastState() (string, string) {
 	var bootId string
-	n, err := fmt.Fscanf(s.file, stateFormat, &bootId)
-	if err != nil || n < 1 {
-		return ""
+	var seqToken string
+	_, err := s.file.Seek(0, 0)
+	if err != nil {
+		return "", ""
 	}
-	return bootId
+	n, err := fmt.Fscanf(s.file, stateFormat, &bootId, &seqToken)
+	if err != nil || n < 2 {
+		return "", ""
+	}
+	return bootId, seqToken
 }
 
-func (s State) SetLastBootId(bootId string) error {
+func (s State) SetState(bootId, seqToken string) error {
 	_, err := s.file.Seek(0, 0)
 	if err != nil {
 		return err
 	}
-	_, err = fmt.Fprintf(s.file, stateFormat, bootId)
+	_, err = fmt.Fprintf(s.file, stateFormat, bootId, seqToken)
 	if err != nil {
 		return err
 	}
