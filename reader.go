@@ -10,7 +10,21 @@ import (
 func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- *Record, skip uint64) {
 	record := &Record{}
 
+	termC := MakeTerminateChannel()
+	checkTerminate := func() bool {
+		select {
+		case <-termC:
+			close(c)
+			return true
+		default:
+			return false
+		}
+	}
+
 	for {
+		if checkTerminate() {
+			return
+		}
 		err := UnmarshalRecord(journal, record)
 		if err != nil {
 			c <- synthRecord(
@@ -27,6 +41,9 @@ func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- *Record
 		}
 
 		for {
+			if checkTerminate() {
+				return
+			}
 			seeked, err := journal.Next()
 			if err != nil {
 				c <- synthRecord(
@@ -35,13 +52,17 @@ func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- *Record
 				// It's likely that we didn't actually advance here, so
 				// we should wait a bit so we don't spin the CPU at 100%
 				// when we run into errors.
-				time.Sleep(10 * time.Second)
+				time.Sleep(2 * time.Second)
 				continue
 			}
 			if seeked == 0 {
 				// If there's nothing new in the stream then we'll
 				// wait for something new to show up.
-				journal.Wait(10 * time.Second)
+				// FIXME: We can actually end up waiting up to 2 seconds
+				// to gracefully terminate because of this. It'd be nicer
+				// to stop waiting if we get a termination signal, but
+				// this will do for now.
+				journal.Wait(2 * time.Second)
 				continue
 			}
 			break
@@ -63,6 +84,7 @@ func BatchRecords(records <-chan *Record, batches chan<- []Record, batchSize int
 	bufs[0] = make([]Record, batchSize)
 	bufs[1] = make([]Record, batchSize)
 	var record *Record
+	var more bool
 	currentBuf := 0
 	next := 0
 	timer := time.NewTimer(time.Second)
@@ -70,7 +92,11 @@ func BatchRecords(records <-chan *Record, batches chan<- []Record, batchSize int
 
 	for {
 		select {
-		case record = <-records:
+		case record, more = <-records:
+			if !more {
+				close(batches)
+				return
+			}
 			bufs[currentBuf][next] = *record
 			next++
 			if next < batchSize {

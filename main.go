@@ -122,5 +122,12 @@ func run(configFilename string) error {
 
 	}
 
+	// We fall out here when interrupted by a signal.
+	// Last chance to write the state.
+	err = state.SetState(bootId, nextSeq)
+	if err != nil {
+		return fmt.Errorf("Failed to write state on exit: %s", err)
+	}
+
 	return nil
 }
