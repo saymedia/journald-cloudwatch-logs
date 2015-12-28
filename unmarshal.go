@@ -4,12 +4,19 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/coreos/go-systemd/sdjournal"
 )
 
 func UnmarshalRecord(journal *sdjournal.Journal, to *Record) error {
-	return unmarshalRecord(journal, reflect.ValueOf(to).Elem())
+	err := unmarshalRecord(journal, reflect.ValueOf(to).Elem())
+	if err == nil {
+		// FIXME: Should use the realtime from the log record,
+		// but for some reason journal.GetRealtimeUsec always fails.
+		to.TimeUsec = time.Now().Unix() * 1000
+	}
+	return err
 }
 
 func unmarshalRecord(journal *sdjournal.Journal, toVal reflect.Value) error {

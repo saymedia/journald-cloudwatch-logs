@@ -1,14 +1,30 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
 	"github.com/coreos/go-systemd/sdjournal"
 )
 
+var help = flag.Bool("help", false, "set to true to show this help")
+
 func main() {
-	err := run()
+	flag.Parse()
+
+	if *help {
+		usage()
+		os.Exit(0)
+	}
+
+	configFilename := flag.Arg(0)
+	if configFilename == "" {
+		usage()
+		os.Exit(1)
+	}
+
+	err := run(configFilename)
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Stderr.Write([]byte{'\n'})
@@ -16,21 +32,39 @@ func main() {
 	}
 }
 
-func run() error {
+func usage() {
+	os.Stderr.WriteString("Usage: journald-cloudwatch-logs <config-file>\n\n")
+	flag.PrintDefaults()
+	os.Stderr.WriteString("\n")
+}
+
+func run(configFilename string) error {
+	config, err := LoadConfig(configFilename)
+	if err != nil {
+		return fmt.Errorf("error reading config: %s", err)
+	}
+
 	journal, err := sdjournal.NewJournal()
 	if err != nil {
 		return fmt.Errorf("error opening journal: %s", err)
 	}
 	defer journal.Close()
 
-	state, err := OpenState("./tmp-state")
+	state, err := OpenState(config.StateFilename)
 	if err != nil {
-		return fmt.Errorf("Failed to open state file: %s", err)
+		return fmt.Errorf("Failed to open %s: %s", config.StateFilename, err)
 	}
 
 	lastBootId, nextSeq := state.LastState()
 
-	writer, err := NewWriter(nextSeq)
+	awsSession := config.NewAWSSession()
+
+	writer, err := NewWriter(
+		awsSession,
+		config.LogGroupName,
+		config.LogStreamName,
+		nextSeq,
+	)
 	if err != nil {
 		return fmt.Errorf("error initializing writer: %s", err)
 	}
@@ -66,12 +100,12 @@ func run() error {
 		return fmt.Errorf("Failed to write state: %s", err)
 	}
 
-	bufSize := 100
+	bufSize := config.BufferSize
 
 	records := make(chan *Record)
 	batches := make(chan []Record)
 
-	go ReadRecords(journal, records, skip)
+	go ReadRecords(config.EC2InstanceId, journal, records, skip)
 	go BatchRecords(records, batches, bufSize)
 
 	for batch := range batches {
@@ -86,7 +120,6 @@ func run() error {
 			return fmt.Errorf("Failed to write state: %s", err)
 		}
 
-		fmt.Println("Journal ", batch)
 	}
 
 	return nil

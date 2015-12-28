@@ -7,7 +7,7 @@ import (
 	"github.com/coreos/go-systemd/sdjournal"
 )
 
-func ReadRecords(journal *sdjournal.Journal, c chan<- *Record, skip uint64) {
+func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- *Record, skip uint64) {
 	record := &Record{}
 
 	for {
@@ -22,6 +22,7 @@ func ReadRecords(journal *sdjournal.Journal, c chan<- *Record, skip uint64) {
 		if skip > 0 {
 			skip--
 		} else {
+			record.InstanceId = instanceId
 			c <- record
 		}
 
