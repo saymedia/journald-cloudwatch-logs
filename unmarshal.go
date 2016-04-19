@@ -12,9 +12,12 @@ import (
 func UnmarshalRecord(journal *sdjournal.Journal, to *Record) error {
 	err := unmarshalRecord(journal, reflect.ValueOf(to).Elem())
 	if err == nil {
-		// FIXME: Should use the realtime from the log record,
-		// but for some reason journal.GetRealtimeUsec always fails.
-		to.TimeUsec = time.Now().Unix() * 1000
+		tstamp, error := journal.GetRealtimeUsec()
+		if(error == nil) {
+			to.TimeUsec = int64(tstamp / 1000)
+		} else {
+			to.TimeUsec = time.Now().Unix() * 1000
+		}
 	}
 	return err
 }
