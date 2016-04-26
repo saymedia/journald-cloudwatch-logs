@@ -55,7 +55,7 @@ Most of the configuration values are optional and have default settings, but a c
 The configuration file uses a syntax like this:
 
 ```js
-log_group_name = "my-awesome-app"
+log_group = "my-awesome-app"
 
 // (you'll need to create this directory before starting the program)
 state_file = "/var/lib/journald-cloudwatch-logs/state"
