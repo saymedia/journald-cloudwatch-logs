@@ -72,6 +72,14 @@ The following configuration settings are supported:
 * `log_group`: (Required) The name of the cloudwatch log group to write logs into. This log group must
   be created before running the program.
 
+* `log_priority`: (Optional) The highest priority of the log messages to read (on a 0-7 scale). This defaults
+    to DEBUG (all messages). This has a behaviour similar to `journalctl -p <priority>`. At the moment, only
+    a single value can be specified, not a range. Possible values are: `0,1,2,3,4,5,6,7` or one of the corresponding
+    `"emerg", "alert", "crit", "err", "warning", "notice", "info", "debug"`.
+    When a single log level is specified, all messages with this log level or a lower (hence more important)
+    log level are read and pushed to CloudWatch. For more information about priority levels, look at
+    https://www.freedesktop.org/software/systemd/man/journalctl.html
+
 * `log_stream`: (Optional) The name of the cloudwatch log stream to write logs into. This defaults to
   the EC2 instance id. Each running instance of this application (along with any other applications
   writing logs into the same log group) must have a unique `log_stream` value. If the given log stream
