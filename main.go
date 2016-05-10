@@ -50,6 +50,8 @@ func run(configFilename string) error {
 	}
 	defer journal.Close()
 
+	AddLogFilters(journal, config)
+
 	state, err := OpenState(config.StateFilename)
 	if err != nil {
 		return fmt.Errorf("Failed to open %s: %s", config.StateFilename, err)
