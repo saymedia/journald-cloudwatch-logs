@@ -75,4 +75,3 @@ func unmarshalRecord(journal *sdjournal.Journal, toVal reflect.Value) error {
 
 	return nil
 }
-

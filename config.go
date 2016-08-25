@@ -38,19 +38,19 @@ func getLogLevel(priority string) (Priority, error) {
 
 	logLevels := map[Priority][]string{
 		EMERGENCY: {"0", "emerg"},
-		ALERT: {"1", "alert"},
-		CRITICAL: {"2", "crit"},
-		ERROR: {"3", "err"},
-		WARNING: {"4", "warning"},
-		NOTICE: {"5", "notice"},
-		INFO: {"6", "info"},
-		DEBUG: {"7", "debug"},
+		ALERT:     {"1", "alert"},
+		CRITICAL:  {"2", "crit"},
+		ERROR:     {"3", "err"},
+		WARNING:   {"4", "warning"},
+		NOTICE:    {"5", "notice"},
+		INFO:      {"6", "info"},
+		DEBUG:     {"7", "debug"},
 	}
 
 	for i, s := range logLevels {
-	    if s[0] == priority || s[1] == priority {
-	        return i, nil
-	    }
+		if s[0] == priority || s[1] == priority {
+			return i, nil
+		}
 	}
 
 	return DEBUG, fmt.Errorf("'%s' is unsupported log priority", priority)
