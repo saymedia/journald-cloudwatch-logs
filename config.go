@@ -21,6 +21,7 @@ type Config struct {
 	LogStreamName  string
 	LogPriority    Priority
 	StateFilename  string
+	JournalDir     string
 	BufferSize     int
 }
 
@@ -31,6 +32,7 @@ type fileConfig struct {
 	LogStreamName string `hcl:"log_stream"`
 	LogPriority   string `hcl:"log_priority"`
 	StateFilename string `hcl:"state_file"`
+	JournalDir    string `hcl:"journal_dir"`
 	BufferSize    int    `hcl:"buffer_size"`
 }
 
@@ -119,6 +121,7 @@ func LoadConfig(filename string) (*Config, error) {
 	}
 
 	config.StateFilename = fConfig.StateFilename
+	config.JournalDir = fConfig.JournalDir
 
 	if fConfig.BufferSize != 0 {
 		config.BufferSize = fConfig.BufferSize
