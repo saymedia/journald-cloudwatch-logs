@@ -68,6 +68,10 @@ The following configuration settings are supported:
   
 * `ec2_instance_id`: (Optional) The id of the EC2 instance on which the tool is running. There is very
   little reason to set this, since it will be automatically set to the id of the host EC2 instance.
+
+* `journal_dir`: (Optional) Override the directory where the systemd journal can be found. This is
+  useful in conjunction with remote log aggregation, to work with journals synced from other systems.
+  The default is to use the local system's journal.
   
 * `log_group`: (Required) The name of the cloudwatch log group to write logs into. This log group must
   be created before running the program.
