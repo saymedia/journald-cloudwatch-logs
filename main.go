@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/coreos/go-systemd/sdjournal"
@@ -44,7 +45,14 @@ func run(configFilename string) error {
 		return fmt.Errorf("error reading config: %s", err)
 	}
 
-	journal, err := sdjournal.NewJournal()
+	var journal *sdjournal.Journal
+	if config.JournalDir == "" {
+		journal, err = sdjournal.NewJournal()
+	} else {
+		log.Printf("using journal dir: %s", config.JournalDir)
+		journal, err = sdjournal.NewJournalFromDir(config.JournalDir)
+	}
+
 	if err != nil {
 		return fmt.Errorf("error opening journal: %s", err)
 	}

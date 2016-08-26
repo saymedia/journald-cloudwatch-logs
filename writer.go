@@ -44,7 +44,7 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 		})
 	}
 
-	putEvents := func () error {
+	putEvents := func() error {
 		request := &cloudwatchlogs.PutLogEventsInput{
 			LogEvents:     events,
 			LogGroupName:  &w.logGroupName,
@@ -61,7 +61,7 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 		return nil
 	}
 
-	createStream := func () error {
+	createStream := func() error {
 		request := &cloudwatchlogs.CreateLogStreamInput{
 			LogGroupName:  &w.logGroupName,
 			LogStreamName: &w.logStreamName,
