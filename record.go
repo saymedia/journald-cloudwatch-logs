@@ -64,7 +64,7 @@ type RecordContainer struct {
 	Tag     string `json:"tag,omitempty" journald:"CONTAINER_TAG"`
 	ID      string `json:"id,omitempty" journald:"CONTAINER_ID"`
 	Full_ID string `json:"id_full,omitempty" journald:"CONTAINER_ID_FULL"`
-	Name    string `json:"Name,omitempty" journald:"CONTAINER_NAME"`
+	Name    string `json:"name,omitempty" journald:"CONTAINER_NAME"`
 }
 
 func (p Priority) MarshalJSON() ([]byte, error) {
