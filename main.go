@@ -112,7 +112,7 @@ func run(configFilename string) error {
 
 	bufSize := config.BufferSize
 
-	records := make(chan *Record)
+	records := make(chan Record)
 	batches := make(chan []Record)
 
 	go ReadRecords(config.EC2InstanceId, journal, records, skip)
