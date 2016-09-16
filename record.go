@@ -39,7 +39,7 @@ type Record struct {
 	Hostname    string       `json:"hostname,omitempty" journald:"_HOSTNAME"`
 	Transport   string       `json:"transport,omitempty" journald:"_TRANSPORT"`
 	Priority    Priority     `json:"priority" journald:"PRIORITY"`
-	Message     string       `json:"message" journald:"MESSAGE"`
+	Message     interface{}  `json:"message" journald:"MESSAGE"`
 	MessageId   string       `json:"messageId,omitempty" journald:"MESSAGE_ID"`
 	Errno       int          `json:"machineId,omitempty" journald:"ERRNO"`
 	Syslog      RecordSyslog `json:"syslog,omitempty"`
