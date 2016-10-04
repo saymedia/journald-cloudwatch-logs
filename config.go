@@ -96,7 +96,7 @@ func LoadConfig(filename string) (*Config, error) {
 	} else {
 		instanceId, err := metaClient.GetMetadata("instance-id")
 		if err != nil {
-			return nil, fmt.Errorf("unable to detect EC2 instance id", err)
+			return nil, fmt.Errorf("unable to detect EC2 instance id: %s", err)
 		}
 		config.EC2InstanceId = instanceId
 	}
