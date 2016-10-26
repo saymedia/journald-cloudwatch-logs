@@ -160,7 +160,6 @@
 		},
 		{
 			"checksumSHA1": "O8c/VKtW34XPJNNlyeb/im8vWSI=",
-			"origin": "github.com/coreos/go-systemd/vendor/github.com/coreos/pkg/dlopen",
 			"path": "github.com/coreos/pkg/dlopen",
 			"revision": "3ac0863d7acf3bc44daf49afef8919af12f704ef",
 			"revisionTime": "2016-07-27T23:37:14Z"
