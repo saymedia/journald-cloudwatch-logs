@@ -86,6 +86,14 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 				if err != nil {
 					return "", fmt.Errorf("failed to put events: %s", err)
 				}
+				return w.nextSequenceToken, nil
+			}
+			if awsErr.Code() == "DataAlreadyAcceptedException" {
+				// This batch was already sent
+				return "", nil
+			}
+			if awsErr.Code() == "InvalidSequenceTokenException" {
+				return "", nil
 			}
 		}
 		return "", fmt.Errorf("failed to put events: %s", err)
