@@ -87,6 +87,10 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 					return "", fmt.Errorf("failed to put events: %s", err)
 				}
 			}
+			if awsErr.Code() == "DataAlreadyAcceptedException" {
+				// This batch was already sent
+				return "", nil
+			}
 		}
 		return "", fmt.Errorf("failed to put events: %s", err)
 	}
