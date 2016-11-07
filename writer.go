@@ -84,12 +84,11 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 
 				err = putEvents()
 				if err != nil {
-					return "", err
+					return "", fmt.Errorf("failed to put events: %s", err)
 				}
 			}
-		} else {
-			return "", err
 		}
+		return "", fmt.Errorf("failed to put events: %s", err)
 	}
 
 	return w.nextSequenceToken, nil
