@@ -25,25 +25,28 @@ var PriorityJSON = map[Priority][]byte{
 }
 
 type Record struct {
-	InstanceId  string       `json:"instanceId,omitempty"`
-	TimeUsec    int64        `json:"-"`
-	PID         int          `json:"pid" journald:"_PID"`
-	UID         int          `json:"uid" journald:"_UID"`
-	GID         int          `json:"gid" journald:"_GID"`
-	Command     string       `json:"cmdName,omitempty" journald:"_COMM"`
-	Executable  string       `json:"exe,omitempty" journald:"_EXE"`
-	CommandLine string       `json:"cmdLine,omitempty" journald:"_CMDLINE"`
-	SystemdUnit string       `json:"systemdUnit,omitempty" journald:"_SYSTEMD_UNIT"`
-	BootId      string       `json:"bootId,omitempty" journald:"_BOOT_ID"`
-	MachineId   string       `json:"machineId,omitempty" journald:"_MACHINE_ID"`
-	Hostname    string       `json:"hostname,omitempty" journald:"_HOSTNAME"`
-	Transport   string       `json:"transport,omitempty" journald:"_TRANSPORT"`
-	Priority    Priority     `json:"priority" journald:"PRIORITY"`
-	Message     string       `json:"message" journald:"MESSAGE"`
-	MessageId   string       `json:"messageId,omitempty" journald:"MESSAGE_ID"`
-	Errno       int          `json:"machineId,omitempty" journald:"ERRNO"`
-	Syslog      RecordSyslog `json:"syslog,omitempty"`
-	Kernel      RecordKernel `json:"kernel,omitempty"`
+	InstanceId     string       `json:"instanceId,omitempty"`
+	TimeUsec       int64        `json:"-"`
+	PID            int          `json:"pid" journald:"_PID"`
+	UID            int          `json:"uid" journald:"_UID"`
+	GID            int          `json:"gid" journald:"_GID"`
+	Command        string       `json:"cmdName,omitempty" journald:"_COMM"`
+	Executable     string       `json:"exe,omitempty" journald:"_EXE"`
+	CommandLine    string       `json:"cmdLine,omitempty" journald:"_CMDLINE"`
+	SystemdUnit    string       `json:"systemdUnit,omitempty" journald:"_SYSTEMD_UNIT"`
+	BootId         string       `json:"bootId,omitempty" journald:"_BOOT_ID"`
+	MachineId      string       `json:"machineId,omitempty" journald:"_MACHINE_ID"`
+	Hostname       string       `json:"hostname,omitempty" journald:"_HOSTNAME"`
+	Transport      string       `json:"transport,omitempty" journald:"_TRANSPORT"`
+	Priority       Priority     `json:"priority" journald:"PRIORITY"`
+	Message        string       `json:"message" journald:"MESSAGE"`
+	MessageId      string       `json:"messageId,omitempty" journald:"MESSAGE_ID"`
+	Errno          int          `json:"machineId,omitempty" journald:"ERRNO"`
+	Syslog         RecordSyslog `json:"syslog,omitempty"`
+	Kernel         RecordKernel `json:"kernel,omitempty"`
+	Container_Name string       `json:"containerName,omitempty" journald:"CONTAINER_NAME"`
+	Container_Tag  string       `json:"containerTag,omitempty" journald:"CONTAINER_TAG"`
+	Container_ID   string       `json:"containerID,omitempty" journald:"CONTAINER_ID"`
 }
 
 type RecordSyslog struct {
