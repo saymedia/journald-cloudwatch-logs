@@ -93,7 +93,24 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 				return "", nil
 			}
 			if awsErr.Code() == "InvalidSequenceTokenException" {
-				return "", nil
+				request := &cloudwatchlogs.DescribeLogStreamsInput{
+					LogGroupName:        &w.logGroupName,
+					LogStreamNamePrefix: &w.logStreamName,
+					Descending:          aws.Bool(true),
+					Limit:               aws.Int64(1),
+				}
+				result, err := w.conn.DescribeLogStreams(request)
+				if err != nil {
+					return "", fmt.Errorf("failed to get next sequence token: %s", err)
+				}
+
+				w.nextSequenceToken = *(result.LogStreams[0].UploadSequenceToken)
+
+				err = putEvents()
+				if err != nil {
+					return "", fmt.Errorf("failed to put events: %s", err)
+				}
+				return w.nextSequenceToken, nil
 			}
 		}
 		return "", fmt.Errorf("failed to put events: %s", err)
