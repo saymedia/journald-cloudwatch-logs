@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -66,6 +67,19 @@ func unmarshalRecord(journal *sdjournal.Journal, toVal reflect.Value) error {
 			break
 		case reflect.String:
 			fieldVal.SetString(value)
+			break
+		// Only Message should be an interface{}
+		case reflect.Interface:
+			// See if we can unmarshal an arbitrary json object
+			if value != "" && value[0] == '{' {
+				var objectVal map[string]interface{}
+				if json.Unmarshal([]byte(value), &objectVal) == nil {
+				  fieldVal.Set(reflect.ValueOf(objectVal))
+					continue
+				}
+			}
+			// Otherwise it's a string
+			fieldVal.Set(reflect.ValueOf(value))
 			break
 		default:
 			// Should never happen
