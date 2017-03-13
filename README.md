@@ -97,6 +97,22 @@ The following configuration settings are supported:
   new events will be written to CloudWatch Logs every second even if the buffer does not fill, but
   this setting provides a maximum batch size to use when clearing a large backlog of events, e.g.
   from system boot when the program starts for the first time.
+
+Additionally values in the configuration file can contain variable expansions of the form ${name} or $name
+which will be expanded from either the AWS Instance Identity Document or the operating system environment
+variables.  At the time of writing the supported InstanceIdentityDocument variables are:
+
+* `${AvailabilityZone}`: The name of the availability zone the instance is running, eg `ap-southeast-2b`
+* `${PrivateIP}`: The AWS internal private IP address of the instance, eg `172.1.2.3`
+* `${Version}`: The version of the InstanceIdentityDocument definition?, eg `2010-08-31`
+* `${Region}`: The name of the region the instance is running in, eg `ap-southeast-2`
+* `${InstanceID}`: The instance identifier, eg `i-0123456789abcdef0`
+* `${InstanceType}`: The type of the instance, eg `x1.32xlarge`
+* `${AccountID}`: The amazon web services account the instance is running under, eg `098765432123`
+* `${ImageID}`: The AMI (image) id the instance was launched from, eg `ami-a1b2c3d4`
+* `${KernelID}`: The kernel ID used to launch the instance (PV instances only)
+* `${RamdiskID}`: The ramdisk ID used to launch the instance (PV instances only)
+* `${Architecture}`: The CPU architecture of the instance, eg `x86_64`
   
 ### AWS API access
 
