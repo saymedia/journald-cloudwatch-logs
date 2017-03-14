@@ -184,7 +184,6 @@ func expandFileConfig(config *fileConfig, metaClient *ec2metadata.EC2Metadata) {
 	rconfig := reflect.ValueOf(config)
 	for i := 0; i < rconfig.Elem().NumField(); i++ {
 		field := rconfig.Elem().Field(i)
-		ftype := rconfig.Elem().Type().Field(i)
 		if field.Type() != reflect.TypeOf("") {
 			continue
 		}
