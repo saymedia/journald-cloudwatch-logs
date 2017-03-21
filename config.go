@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	awsCredentials "github.com/aws/aws-sdk-go/aws/credentials"
@@ -190,16 +191,51 @@ func expandFileConfig(config *fileConfig, metaClient *ec2metadata.EC2Metadata) {
 		val := field.Interface().(string)
 		if val != "" {
 			field.SetString(
-				os.Expand(
+				expandBraceVars(
 					val,
 					func(varname string) string {
-						if val, exists := vars[varname]; exists {
-							return val
+						if strings.HasPrefix(varname, "instance.") {
+							if val, exists := vars[strings.TrimPrefix(varname, "instance.")]; exists {
+								return val
+							}
+							// Unknown key => empty string
+							return "" 
+						} else if (strings.HasPrefix(varname, "env.")) {
+							return os.Getenv(strings.TrimPrefix(varname, "env."))
+						} else {
+							// Unknown prefix => empty string
+							return ""
 						}
-						return os.Getenv(varname)
 					},
 				),
 			)
 		}
 	}
 }
+
+
+// Modified version of os.Expand() that only expands ${name} and not $name
+func expandBraceVars(s string, mapping func(string) string) string {
+	buf := make([]byte, 0, 2*len(s))
+	// ${} is all ASCII, so bytes are fine for this operation.
+	i := 0
+	for j := 0; j < len(s); j++ {
+		if s[j] == '$' && j+3 < len(s) && s[j+1] == '{' {
+			buf = append(buf, s[i:j]...)
+			idx := strings.Index(s[j+2:], "}")
+			if (idx >= 0) {
+				// We have a full ${name} string
+				buf = append(buf, mapping(s[j+2:j+2+idx])...)
+				j += 2+idx
+			} else {
+				// We ran out of string (unclosed ${)
+				return string(buf)
+			}
+			i = j + 1
+		}
+	}
+	return string(buf) + s[i:]
+}
+
+
+
