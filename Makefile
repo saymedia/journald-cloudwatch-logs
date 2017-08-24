@@ -5,7 +5,7 @@ SOURCES:=$(shell find -type f -name '*.go')
 PROGRAM:=journald-cloudwatch-logs
 
 .PHONY: all
-all: $(PROGRAM)
+all: $(PROGRAM) $(PROGRAM).digests
 
 .PHONY: deps
 deps:
@@ -13,6 +13,9 @@ deps:
 
 $(PROGRAM): $(SOURCES) deps
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o $@
+
+$(PROGRAM).digests: $(PROGRAM)
+	sha256sum $< > $@
 
 .PHONY: install
 install: build
