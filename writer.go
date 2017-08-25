@@ -61,6 +61,14 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 		return nil
 	}
 
+	createGroup := func() error {
+		request := &cloudwatchlogs.CreateLogGroupInput{
+			LogGroupName: &w.logGroupName,
+		}
+		_, err := w.conn.CreateLogGroup(request)
+		return err
+	}
+
 	createStream := func() error {
 		request := &cloudwatchlogs.CreateLogStreamInput{
 			LogGroupName:  &w.logGroupName,
@@ -74,10 +82,18 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == "ResourceNotFoundException" {
-				// Maybe our log stream doesn't exist yet. We'll try
-				// to create it and then, if we're successful, try
-				// writing the events again.
-				err := createStream()
+				// Maybe our log group or stream doesn't exist
+				// yet. We'll try to create it and then, if we're
+				// successful, try writing the events again.
+				err := createGroup()
+				if err != nil {
+					if awsErr, ok := err.(awserr.Error); ok {
+						if awsErr.Code() != "ResourceAlreadyExistsException" {
+							return "", fmt.Errorf("Failed to create stream: %s", err)
+						}
+					}
+				}
+				err = createStream()
 				if err != nil {
 					return "", fmt.Errorf("failed to create stream: %s", err)
 				}
