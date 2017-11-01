@@ -1,9 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-systemd/sdjournal"
@@ -53,6 +55,17 @@ func unmarshalRecord(journal *sdjournal.Journal, toVal reflect.Value) error {
 		// The value is returned with the key and an equals sign on
 		// the front, so we'll trim those off.
 		value = value[len(jdKey)+1:]
+
+		if fieldType.Name() == "RawMessage" {
+			if !strings.HasPrefix(value, `{"`) {
+				value = `"` + value + `"`
+			}
+			// fix unwanted characters to JSON message
+			value = strings.Replace(value, "\n", `\n`, -1)
+			value = strings.Replace(value, "\t", `\t`, -1)
+			fieldVal.SetBytes(json.RawMessage(value))
+			continue
+		}
 
 		switch fieldTypeKind {
 		case reflect.Int:
