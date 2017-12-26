@@ -99,7 +99,7 @@ The following configuration settings are supported:
   from system boot when the program starts for the first time.
 
 Additionally values in the configuration file can contain variable expansions of the form
-${instance.<key>} which will be exapnded from the AWS Instance Identity Document or ${env.<name>}
+${instance.<key>} which will be expanded from the AWS Instance Identity Document or ${env.<name>}
 which will be expanded from the operating system environment variables, if a key does not exist
 it expands to the empty string.
 
