@@ -1,4 +1,4 @@
-FROM centos:7
+FROM fedora:latest
 ADD journald-cloudwatch-logs .
 
 CMD echo "state_file = \"/var/run/journald-cloudwatch-state\"" > /etc/journald-cloudwatch && \
