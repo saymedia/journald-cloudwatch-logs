@@ -1,11 +1,16 @@
 package main
 
 import (
-	"github.com/coreos/go-systemd/sdjournal"
 	"strconv"
+
+	"github.com/coreos/go-systemd/sdjournal"
 )
 
 func AddLogFilters(journal *sdjournal.Journal, config *Config) {
+
+	if unit := config.Unit; unit != "" {
+		journal.AddMatch(sdjournal.SD_JOURNAL_FIELD_SYSTEMD_UNIT + "=" + unit)
+	}
 
 	// Add Priority Filters
 	if config.LogPriority < DEBUG {
