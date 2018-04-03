@@ -84,6 +84,10 @@ The following configuration settings are supported:
     log level are read and pushed to CloudWatch. For more information about priority levels, look at
     https://www.freedesktop.org/software/systemd/man/journalctl.html
 
+* `unit`: (Optional) The name of a systemd unit to filter to. This has a behaviour similar to
+  `journalctl -u <unit>`. If this is specified, only journal messages originating from this unit
+  will be pushed to CloudWatch.
+
 * `log_stream`: (Optional) The name of the cloudwatch log stream to write logs into. This defaults to
   the EC2 instance id. Each running instance of this application (along with any other applications
   writing logs into the same log group) must have a unique `log_stream` value. If the given log stream
