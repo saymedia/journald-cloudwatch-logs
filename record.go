@@ -26,7 +26,7 @@ var PriorityJSON = map[Priority][]byte{
 
 type Record struct {
 	InstanceId     string       `json:"instanceId,omitempty"`
-	TimeUsec       int64        `json:"-"`
+	TimeNsec       int64        `json:"-"`
 	PID            int          `json:"pid" journald:"_PID"`
 	UID            int          `json:"uid" journald:"_UID"`
 	GID            int          `json:"gid" journald:"_GID"`

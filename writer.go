@@ -40,7 +40,7 @@ func (w *Writer) WriteBatch(records []Record) (string, error) {
 
 		events = append(events, &cloudwatchlogs.InputLogEvent{
 			Message:   aws.String(jsonData),
-			Timestamp: aws.Int64(int64(record.TimeUsec)),
+			Timestamp: aws.Int64(record.TimeNsec / 1e6),
 		})
 	}
 
