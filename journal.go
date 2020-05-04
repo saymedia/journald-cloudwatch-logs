@@ -22,7 +22,7 @@ func AddLogFilters(journal *sdjournal.Journal, config *Config) {
 	if config.LogUnit != "" {
 		units_raw := strings.Split(config.LogUnit, ",")
 
-		for _, unit_raw := range(units) {
+		for _, unit_raw := range(units_raw) {
 			unit := strings.TrimSpace(unit_raw)
 			if unit != "" {
 				journal.AddMatch("SYSLOG_IDENTIFIER="+unit)
