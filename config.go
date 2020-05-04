@@ -16,13 +16,13 @@ import (
 	"github.com/hashicorp/hcl"
 )
 
-type Config struct {
+type config struct {
 	AWSCredentials *awsCredentials.Credentials
 	AWSRegion      string
-	EC2InstanceId  string
+	EC2InstanceID  string
 	LogGroupName   string
 	LogStreamName  string
-	LogPriority    Priority
+	LogPriority    priorityType
 	LogUnit        string
 	StateFilename  string
 	JournalDir     string
@@ -31,7 +31,7 @@ type Config struct {
 
 type fileConfig struct {
 	AWSRegion     string `hcl:"aws_region"`
-	EC2InstanceId string `hcl:"ec2_instance_id"`
+	EC2InstanceID string `hcl:"ec2_instance_id"`
 	LogGroupName  string `hcl:"log_group"`
 	LogStreamName string `hcl:"log_stream"`
 	LogPriority   string `hcl:"log_priority"`
@@ -41,17 +41,17 @@ type fileConfig struct {
 	BufferSize    int    `hcl:"buffer_size"`
 }
 
-func getLogLevel(priority string) (Priority, error) {
+func getLogLevel(priority string) (priorityType, error) {
 
-	logLevels := map[Priority][]string{
-		EMERGENCY: {"0", "emerg"},
-		ALERT:     {"1", "alert"},
-		CRITICAL:  {"2", "crit"},
-		ERROR:     {"3", "err"},
-		WARNING:   {"4", "warning"},
-		NOTICE:    {"5", "notice"},
-		INFO:      {"6", "info"},
-		DEBUG:     {"7", "debug"},
+	logLevels := map[priorityType][]string{
+		emergencyP: {"0", "emerg"},
+		alertP:     {"1", "alert"},
+		criticalP:  {"2", "crit"},
+		errorP:     {"3", "err"},
+		warningP:   {"4", "warning"},
+		noticeP:    {"5", "notice"},
+		infoP:      {"6", "info"},
+		debugP:     {"7", "debug"},
 	}
 
 	for i, s := range logLevels {
@@ -60,10 +60,10 @@ func getLogLevel(priority string) (Priority, error) {
 		}
 	}
 
-	return DEBUG, fmt.Errorf("'%s' is unsupported log priority", priority)
+	return debugP, fmt.Errorf("'%s' is unsupported log priority", priority)
 }
 
-func LoadConfig(filename string) (*Config, error) {
+func loadConfig(filename string) (*config, error) {
 	configBytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func LoadConfig(filename string) (*Config, error) {
 
 	expandFileConfig(&fConfig, metaClient)
 
-	config := &Config{}
+	config := &config{}
 
 	if fConfig.AWSRegion != "" {
 		config.AWSRegion = fConfig.AWSRegion
@@ -98,23 +98,23 @@ func LoadConfig(filename string) (*Config, error) {
 		config.AWSRegion = region
 	}
 
-	if fConfig.EC2InstanceId != "" {
-		config.EC2InstanceId = fConfig.EC2InstanceId
+	if fConfig.EC2InstanceID != "" {
+		config.EC2InstanceID = fConfig.EC2InstanceID
 	} else {
-		instanceId, err := metaClient.GetMetadata("instance-id")
+		instanceID, err := metaClient.GetMetadata("instance-id")
 		if err != nil {
 			return nil, fmt.Errorf("unable to detect EC2 instance id: %s", err)
 		}
-		config.EC2InstanceId = instanceId
+		config.EC2InstanceID = instanceID
 	}
 
 	if fConfig.LogPriority == "" {
 		// Log everything
-		config.LogPriority = DEBUG
+		config.LogPriority = debugP
 	} else {
 		config.LogPriority, err = getLogLevel(fConfig.LogPriority)
 		if err != nil {
-			return nil, fmt.Errorf("The provided log filtering '%s' is unsupported by systemd!", fConfig.LogPriority)
+			return nil, fmt.Errorf("The provided log filtering '%s' is unsupported by systemd", fConfig.LogPriority)
 		}
 	}
 
@@ -125,7 +125,7 @@ func LoadConfig(filename string) (*Config, error) {
 		config.LogStreamName = fConfig.LogStreamName
 	} else {
 		// By default we use the instance id as the stream name.
-		config.LogStreamName = config.EC2InstanceId
+		config.LogStreamName = config.EC2InstanceID
 	}
 
 	config.StateFilename = fConfig.StateFilename
@@ -147,7 +147,7 @@ func LoadConfig(filename string) (*Config, error) {
 	return config, nil
 }
 
-func (c *Config) NewAWSSession() *awsSession.Session {
+func (c *config) newAWSSession() *awsSession.Session {
 	config := &aws.Config{
 		Credentials: c.AWSCredentials,
 		Region:      aws.String(c.AWSRegion),
@@ -155,7 +155,6 @@ func (c *Config) NewAWSSession() *awsSession.Session {
 	}
 	return awsSession.New(config)
 }
-
 
 /*
  * Expand variables of the form $Foo or ${Foo} in the user provided config
@@ -170,12 +169,12 @@ func expandFileConfig(config *fileConfig, metaClient *ec2metadata.EC2Metadata) {
 	// struct extracting the string fields and their values into the vars map
 	data, err := metaClient.GetInstanceIdentityDocument()
 	if err == nil {
-		metadata := reflect.ValueOf( data )
+		metadata := reflect.ValueOf(data)
 
 		for i := 0; i < metadata.NumField(); i++ {
 			field := metadata.Field(i)
 			ftype := metadata.Type().Field(i)
-			if (field.Type() != reflect.TypeOf("")) {
+			if field.Type() != reflect.TypeOf("") {
 				continue
 			}
 			vars[ftype.Name] = fmt.Sprintf("%v", field.Interface())
@@ -203,7 +202,7 @@ func expandFileConfig(config *fileConfig, metaClient *ec2metadata.EC2Metadata) {
 							}
 							// Unknown key => empty string
 							return ""
-						} else if (strings.HasPrefix(varname, "env.")) {
+						} else if strings.HasPrefix(varname, "env.") {
 							return os.Getenv(strings.TrimPrefix(varname, "env."))
 						} else {
 							// Unknown prefix => empty string
@@ -216,7 +215,6 @@ func expandFileConfig(config *fileConfig, metaClient *ec2metadata.EC2Metadata) {
 	}
 }
 
-
 // Modified version of os.Expand() that only expands ${name} and not $name
 func expandBraceVars(s string, mapping func(string) string) string {
 	buf := make([]byte, 0, 2*len(s))
@@ -226,10 +224,10 @@ func expandBraceVars(s string, mapping func(string) string) string {
 		if s[j] == '$' && j+3 < len(s) && s[j+1] == '{' {
 			buf = append(buf, s[i:j]...)
 			idx := strings.Index(s[j+2:], "}")
-			if (idx >= 0) {
+			if idx >= 0 {
 				// We have a full ${name} string
 				buf = append(buf, mapping(s[j+2:j+2+idx])...)
-				j += 2+idx
+				j += 2 + idx
 			} else {
 				// We ran out of string (unclosed ${)
 				return string(buf)
