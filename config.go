@@ -23,6 +23,7 @@ type Config struct {
 	LogGroupName   string
 	LogStreamName  string
 	LogPriority    Priority
+	LogUnit        string
 	StateFilename  string
 	JournalDir     string
 	BufferSize     int
@@ -34,6 +35,7 @@ type fileConfig struct {
 	LogGroupName  string `hcl:"log_group"`
 	LogStreamName string `hcl:"log_stream"`
 	LogPriority   string `hcl:"log_priority"`
+	LogUnit       string `hcl:"log_unit"`
 	StateFilename string `hcl:"state_file"`
 	JournalDir    string `hcl:"journal_dir"`
 	BufferSize    int    `hcl:"buffer_size"`
@@ -116,6 +118,7 @@ func LoadConfig(filename string) (*Config, error) {
 		}
 	}
 
+	config.LogUnit = fConfig.LogUnit
 	config.LogGroupName = fConfig.LogGroupName
 
 	if fConfig.LogStreamName != "" {
@@ -199,7 +202,7 @@ func expandFileConfig(config *fileConfig, metaClient *ec2metadata.EC2Metadata) {
 								return val
 							}
 							// Unknown key => empty string
-							return "" 
+							return ""
 						} else if (strings.HasPrefix(varname, "env.")) {
 							return os.Getenv(strings.TrimPrefix(varname, "env."))
 						} else {
@@ -236,6 +239,3 @@ func expandBraceVars(s string, mapping func(string) string) string {
 	}
 	return string(buf) + s[i:]
 }
-
-
-
