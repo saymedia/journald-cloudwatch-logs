@@ -9,8 +9,8 @@ import (
 	"github.com/coreos/go-systemd/sdjournal"
 )
 
-func UnmarshalRecord(journal *sdjournal.Journal, to *Record) error {
-	err := unmarshalRecord(journal, reflect.ValueOf(to).Elem())
+func unmarshalRecord(journal *sdjournal.Journal, to *record) error {
+	err := unmarshalRecordVal(journal, reflect.ValueOf(to).Elem())
 	if err == nil {
 		// FIXME: Should use the realtime from the log record,
 		// but for some reason journal.GetRealtimeUsec always fails.
@@ -19,7 +19,7 @@ func UnmarshalRecord(journal *sdjournal.Journal, to *Record) error {
 	return err
 }
 
-func unmarshalRecord(journal *sdjournal.Journal, toVal reflect.Value) error {
+func unmarshalRecordVal(journal *sdjournal.Journal, toVal reflect.Value) error {
 	toType := toVal.Type()
 
 	numField := toVal.NumField()
@@ -36,7 +36,7 @@ func unmarshalRecord(journal *sdjournal.Journal, toVal reflect.Value) error {
 
 		if fieldTypeKind == reflect.Struct {
 			// Recursively unmarshal from the same journal
-			unmarshalRecord(journal, fieldVal)
+			unmarshalRecordVal(journal, fieldVal)
 		}
 
 		jdKey := fieldTag.Get("journald")
