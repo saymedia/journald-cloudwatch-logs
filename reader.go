@@ -7,8 +7,8 @@ import (
 	"github.com/coreos/go-systemd/sdjournal"
 )
 
-func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- Record, skip uint64) {
-	record := &Record{}
+func readRecords(instanceID string, journal *sdjournal.Journal, c chan<- record, skip uint64) {
+	record := &record{}
 
 	termC := MakeTerminateChannel()
 	checkTerminate := func() bool {
@@ -25,7 +25,7 @@ func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- Record,
 		if checkTerminate() {
 			return
 		}
-		err := UnmarshalRecord(journal, record)
+		err := unmarshalRecord(journal, record)
 		if err != nil {
 			c <- synthRecord(
 				fmt.Errorf("error unmarshalling record: %s", err),
@@ -36,7 +36,7 @@ func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- Record,
 		if skip > 0 {
 			skip--
 		} else {
-			record.InstanceId = instanceId
+			record.InstanceID = instanceID
 			c <- *record
 		}
 
@@ -75,15 +75,15 @@ func ReadRecords(instanceId string, journal *sdjournal.Journal, c chan<- Record,
 // batch size.
 // If records don't show up fast enough, smaller batches will be returned
 // each second as long as at least one item is in the buffer.
-func BatchRecords(records <-chan Record, batches chan<- []Record, batchSize int) {
+func BatchRecords(records <-chan record, batches chan<- []record, batchSize int) {
 	// We have two buffers here so that we can fill one while the
 	// caller is working on the other. The caller is therefore
 	// guaranteed that the returned slice will remain valid until
 	// the next read of the batches channel.
-	var bufs [2][]Record
-	bufs[0] = make([]Record, batchSize)
-	bufs[1] = make([]Record, batchSize)
-	var record Record
+	var bufs [2][]record
+	bufs[0] = make([]record, batchSize)
+	bufs[1] = make([]record, batchSize)
+	var record record
 	var more bool
 	currentBuf := 0
 	next := 0
@@ -132,10 +132,10 @@ func BatchRecords(records <-chan Record, batches chan<- []Record, batchSize int)
 // synthRecord produces synthetic records to report errors, so that
 // we can stream our own errors directly into cloudwatch rather than
 // emitting them through journald and risking feedback loops.
-func synthRecord(err error) Record {
-	return Record{
+func synthRecord(err error) record {
+	return record{
 		Command:  "journald-cloudwatch-logs",
-		Priority: ERROR,
+		Priority: errorP,
 		Message:  err.Error(),
 	}
 }

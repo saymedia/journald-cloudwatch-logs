@@ -10,17 +10,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 )
 
-type Writer struct {
+type writer struct {
 	conn              *cloudwatchlogs.CloudWatchLogs
 	logGroupName      string
 	logStreamName     string
 	nextSequenceToken string
 }
 
-func NewWriter(sess *awsSession.Session, logGroupName, logStreamName, firstSeqToken string) (*Writer, error) {
+func newWriter(sess *awsSession.Session, logGroupName, logStreamName, firstSeqToken string) (*writer, error) {
 	conn := cloudwatchlogs.New(sess)
 
-	return &Writer{
+	return &writer{
 		conn:              conn,
 		logGroupName:      logGroupName,
 		logStreamName:     logStreamName,
@@ -28,7 +28,7 @@ func NewWriter(sess *awsSession.Session, logGroupName, logStreamName, firstSeqTo
 	}, nil
 }
 
-func (w *Writer) WriteBatch(records []Record) (string, error) {
+func (w *writer) writeBatch(records []record) (string, error) {
 
 	events := make([]*cloudwatchlogs.InputLogEvent, 0, len(records))
 	for _, record := range records {

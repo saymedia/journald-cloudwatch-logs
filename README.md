@@ -65,14 +65,14 @@ The following configuration settings are supported:
 
 * `aws_region`: (Optional) The AWS region whose CloudWatch Logs API will be written to. If not provided,
   this defaults to the region where the host EC2 instance is running.
-  
+
 * `ec2_instance_id`: (Optional) The id of the EC2 instance on which the tool is running. There is very
   little reason to set this, since it will be automatically set to the id of the host EC2 instance.
 
 * `journal_dir`: (Optional) Override the directory where the systemd journal can be found. This is
   useful in conjunction with remote log aggregation, to work with journals synced from other systems.
   The default is to use the local system's journal.
-  
+
 * `log_group`: (Required) The name of the cloudwatch log group to write logs into. This log group must
   be created before running the program.
 
@@ -84,14 +84,18 @@ The following configuration settings are supported:
     log level are read and pushed to CloudWatch. For more information about priority levels, look at
     https://www.freedesktop.org/software/systemd/man/journalctl.html
 
+* `log_unit`: (Optional) The `journalctl` unit to filter. By default,
+  not filter. Replicates the behaviour of use the command `journalctl
+  -u <log_unit>`. Multiple values can be provided, separated by "`,`".
+
 * `log_stream`: (Optional) The name of the cloudwatch log stream to write logs into. This defaults to
   the EC2 instance id. Each running instance of this application (along with any other applications
   writing logs into the same log group) must have a unique `log_stream` value. If the given log stream
   doesn't exist then it will be created before writing the first set of journal events.
-  
+
 * `state_file`: (Required) Path to a location where the program can write, and later read, some
   state it needs to preserve between runs. (The format of this file is an implementation detail.)
-  
+
 * `buffer_size`: (Optional) The size of the local event buffer where journal events will be kept
   in order to write batches of events to the CloudWatch Logs API. The default is 100. A batch of
   new events will be written to CloudWatch Logs every second even if the buffer does not fill, but
@@ -116,7 +120,7 @@ At the time of writing, in early 2017, the supported InstanceIdentityDocument va
 * `${instance.KernelID}`: The kernel ID used to launch the instance (PV instances only)
 * `${instance.RamdiskID}`: The ramdisk ID used to launch the instance (PV instances only)
 * `${instance.Architecture}`: The CPU architecture of the instance, eg `x86_64`
-  
+
 ### AWS API access
 
 This program requires access to call some of the Cloudwatch API functions. The recommended way to

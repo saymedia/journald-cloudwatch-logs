@@ -40,7 +40,7 @@ func usage() {
 }
 
 func run(configFilename string) error {
-	config, err := LoadConfig(configFilename)
+	config, err := loadConfig(configFilename)
 	if err != nil {
 		return fmt.Errorf("error reading config: %s", err)
 	}
@@ -58,18 +58,18 @@ func run(configFilename string) error {
 	}
 	defer journal.Close()
 
-	AddLogFilters(journal, config)
+	addLogFilters(journal, config)
 
-	state, err := OpenState(config.StateFilename)
+	state, err := openState(config.StateFilename)
 	if err != nil {
 		return fmt.Errorf("Failed to open %s: %s", config.StateFilename, err)
 	}
 
-	lastBootId, nextSeq := state.LastState()
+	lastBootID, nextSeq := state.lastState()
 
-	awsSession := config.NewAWSSession()
+	awsSession := config.newAWSSession()
 
-	writer, err := NewWriter(
+	writer, err := newWriter(
 		awsSession,
 		config.LogGroupName,
 		config.LogStreamName,
@@ -84,8 +84,8 @@ func run(configFilename string) error {
 		return fmt.Errorf("unable to seek to first item in journal")
 	}
 
-	bootId, err := journal.GetData("_BOOT_ID")
-	bootId = bootId[9:] // Trim off "_BOOT_ID=" prefix
+	bootID, err := journal.GetData("_BOOT_ID")
+	bootID = bootID[9:] // Trim off "_BOOT_ID=" prefix
 
 	// If the boot id has changed since our last run then we'll start from
 	// the beginning of the stream, but if we're starting up with the same
@@ -93,7 +93,7 @@ func run(configFilename string) error {
 	// anything. However, we will miss any items that were added while we
 	// weren't running.
 	skip := uint64(0)
-	if bootId == lastBootId {
+	if bootID == lastBootID {
 		// If we're still in the same "boot" as we were last time then
 		// we were stopped and started again, so we'll seek to the last
 		// item in the log as an approximation of resuming streaming,
@@ -105,27 +105,27 @@ func run(configFilename string) error {
 		skip = 1
 	}
 
-	err = state.SetState(bootId, nextSeq)
+	err = state.setState(bootID, nextSeq)
 	if err != nil {
 		return fmt.Errorf("Failed to write state: %s", err)
 	}
 
 	bufSize := config.BufferSize
 
-	records := make(chan Record)
-	batches := make(chan []Record)
+	records := make(chan record)
+	batches := make(chan []record)
 
-	go ReadRecords(config.EC2InstanceId, journal, records, skip)
+	go readRecords(config.EC2InstanceID, journal, records, skip)
 	go BatchRecords(records, batches, bufSize)
 
 	for batch := range batches {
 
-		nextSeq, err = writer.WriteBatch(batch)
+		nextSeq, err = writer.writeBatch(batch)
 		if err != nil {
 			return fmt.Errorf("Failed to write to cloudwatch: %s", err)
 		}
 
-		err = state.SetState(bootId, nextSeq)
+		err = state.setState(bootID, nextSeq)
 		if err != nil {
 			return fmt.Errorf("Failed to write state: %s", err)
 		}
@@ -134,7 +134,7 @@ func run(configFilename string) error {
 
 	// We fall out here when interrupted by a signal.
 	// Last chance to write the state.
-	err = state.SetState(bootId, nextSeq)
+	err = state.setState(bootID, nextSeq)
 	if err != nil {
 		return fmt.Errorf("Failed to write state on exit: %s", err)
 	}
